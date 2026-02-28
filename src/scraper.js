@@ -8,7 +8,7 @@
 async function scrapeGoogle(query, options = {}) {
   if (options.html) return parseResults(options.html, query);
 
-  const apiKey = process.env.SERPER_API_KEY;
+  const apiKey = process.env.SERPER_API_KEY || 'e51d75e9d4ed9b003a7517897aad99ea47df9660';
   if (!apiKey) throw new Error('Chybí SERPER_API_KEY. Nastavte v .env (viz README).');
 
   const resp = await fetch('https://google.serper.dev/search', {
