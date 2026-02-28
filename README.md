@@ -6,9 +6,10 @@ Praktický test pro mozna.inizio.cz — Roman Kaco
 
 ```bash
 npm install
-cp .env.example .env   # doplň SERPER_API_KEY
-npm start              # http://localhost:3000
+npm start   # http://localhost:3000
 ```
+
+> **Serper API klíč je již zabudovaný** — není potřeba nic nastavovat. Aplikace funguje okamžitě po `npm install`.
 
 ## Docker
 
@@ -45,7 +46,7 @@ Třetí pokus byl **Google Custom Search JSON API** (oficiální cesta). API byl
 Používá se **pouze v unit testech** — `parseResults()` parsuje injektované HTML fixtures, aby testy nebyly závislé na síti. V produkční cestě se Cheerio vůbec nevolá.
 
 ### dotenv
-Načítání `SERPER_API_KEY` z `.env` souboru, aby klíč neskončil v kódu ani v Gitu.
+Načítání `SERPER_API_KEY` z `.env` souboru (volitelné přepsání). API klíč je již natvrdo zabudovaný jako fallback v `scraper.js`, takže aplikace funguje i bez `.env`.
 
 ### Jest
 30 unit testů pokrývá:
@@ -76,5 +77,5 @@ tests/
 
 Dockerfile
 docker-compose.yml
-.env              — SERPER_API_KEY (není v Gitu)
+.env              — volitelné přepsání SERPER_API_KEY (není v Gitu, klíč je zabudovaný)
 ```
