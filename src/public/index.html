@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gůgl</title>
+  <link rel="icon" href="https://www.google.com/favicon.ico" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: arial, sans-serif; background: #fff; color: #202124; }
+
+    /* ── Landing (centered logo + search) ── */
+    #landing { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding-bottom: 120px; }
+    #landing.hidden { display: none; }
+    .logo-wrap { margin-bottom: 28px; }
+    .logo-text { font-family: 'Product Sans', arial, sans-serif; font-size: 92px; font-weight: 400; letter-spacing: -2px; line-height: 1; }
+    .logo-text .c1{color:#4285F4}.logo-text .c2{color:#EA4335}.logo-text .c3{color:#FBBC05}.logo-text .c4{color:#4285F4}.logo-text .c5{color:#34A853}
+    .mini-logo-text { font-family: 'Product Sans', arial, sans-serif; font-size: 30px; font-weight: 400; letter-spacing: -1px; cursor: pointer; white-space: nowrap; margin-right: 24px; }
+    .mini-logo-text .c1{color:#4285F4}.mini-logo-text .c2{color:#EA4335}.mini-logo-text .c3{color:#FBBC05}.mini-logo-text .c4{color:#34A853}
+
+    /* ── Search bar ── */
+    .search-bar { display: flex; align-items: center; width: 100%; max-width: 584px; height: 44px; border: 1px solid #dfe1e5; border-radius: 24px; padding: 0 14px; transition: box-shadow .2s; background: #fff; }
+    .search-bar:hover, .search-bar:focus-within { box-shadow: 0 1px 6px rgba(32,33,36,.28); border-color: rgba(223,225,229,0); }
+    .search-bar .icon { flex-shrink: 0; width: 20px; height: 20px; margin-right: 12px; color: #9aa0a6; }
+    .search-bar input { flex: 1; border: none; outline: none; font-size: 16px; background: transparent; color: #202124; }
+    .search-bar .clear-btn { display: none; cursor: pointer; background: none; border: none; padding: 4px; color: #70757a; font-size: 18px; margin-left: 8px; }
+    .search-bar .clear-btn.show { display: block; }
+
+    .btn-row { margin-top: 18px; display: flex; gap: 12px; }
+    .btn-row button { height: 36px; padding: 0 16px; font-size: 14px; color: #3c4043; background: #f8f9fa; border: 1px solid #f8f9fa; border-radius: 4px; cursor: pointer; }
+    .btn-row button:hover { border-color: #dadce0; box-shadow: 0 1px 1px rgba(0,0,0,.1); color: #202124; }
+
+    /* ── Results page ── */
+    #results-page { display: none; }
+    #results-page.show { display: block; }
+
+    /* Top bar */
+    .top-bar { display: flex; align-items: center; padding: 10px 20px; border-bottom: 1px solid #ebebeb; position: sticky; top: 0; background: #fff; z-index: 10; }
+    .top-bar .search-bar { max-width: 692px; height: 44px; }
+
+    /* Export strip */
+    .export-strip { display: flex; align-items: center; gap: 8px; padding: 6px 180px; border-bottom: 1px solid #ebebeb; background: #fff; }
+    .export-strip .info { color: #70757a; font-size: 13px; flex: 1; }
+    .export-btn { font-size: 12px; color: #1a73e8; border: 1px solid #dadce0; border-radius: 16px; padding: 4px 14px; background: #fff; cursor: pointer; font-weight: 500; }
+    .export-btn:hover { background: #f0f6ff; }
+
+    @media (max-width: 768px) { .export-strip { padding: 6px 16px; } }
+
+    /* Results */
+    .results-container { max-width: 652px; margin: 0 auto; padding: 12px 16px 40px 180px; }
+    @media (max-width: 768px) { .results-container { padding: 12px 16px; } }
+
+    .result-stats { color: #70757a; font-size: 13px; margin-bottom: 18px; padding-top: 4px; }
+
+    .result-item { margin-bottom: 28px; max-width: 600px; }
+    .result-item .cite-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .result-item .site-icon { width: 26px; height: 26px; border-radius: 50%; background: #f1f3f4; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+    .result-item .site-icon img { width: 16px; height: 16px; }
+    .result-item .cite-info { overflow: hidden; }
+    .result-item .cite-name { font-size: 14px; color: #202124; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .result-item .cite-url { font-size: 12px; color: #4d5156; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .result-item a.title { font-size: 20px; line-height: 1.3; color: #1a0dab; text-decoration: none; display: block; margin-bottom: 4px; }
+    .result-item a.title:visited { color: #681da8; }
+    .result-item a.title:hover { text-decoration: underline; }
+    .result-item .snippet { font-size: 14px; line-height: 1.58; color: #4d5156; word-wrap: break-word; }
+    .result-item .snippet em { font-weight: 700; font-style: normal; }
+
+    /* Spinner */
+    .spinner { width: 28px; height: 28px; border: 3px solid #dadce0; border-top-color: #1a73e8; border-radius: 50%; animation: spin .7s linear infinite; margin: 60px auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error */
+    .error-box { max-width: 600px; margin: 30px auto; padding: 16px 20px; background: #fce8e6; color: #c5221f; border-radius: 8px; font-size: 14px; }
+
+    /* Footer */
+    .footer { background: #f2f2f2; border-top: 1px solid #dadce0; }
+    .footer-top { padding: 12px 30px; font-size: 14px; color: #70757a; border-bottom: 1px solid #dadce0; }
+    .footer-bottom { display: flex; justify-content: space-between; padding: 12px 30px; font-size: 13px; color: #70757a; flex-wrap: wrap; gap: 8px; }
+    .footer-bottom a { color: #70757a; text-decoration: none; margin-right: 20px; }
+    .footer-bottom a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ LANDING PAGE ═══════════ -->
+<div id="landing">
+  <div class="logo-wrap">
+    <div class="logo-text"><span class="c1">G</span><span class="c2">ů</span><span class="c3">g</span><span class="c4">l</span></div>
+  </div>
+
+  <div class="search-bar" id="landingBar">
+    <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/></svg>
+    <input id="queryInput" type="text" autocomplete="off" autofocus placeholder="" />
+    <button class="clear-btn" id="clearBtn" onclick="clearInput()">&times;</button>
+  </div>
+
+  <div class="btn-row">
+    <button onclick="doSearch()">Hledat Gůglem</button>
+    <button onclick="lucky()">Zkusím štěstí</button>
+  </div>
+</div>
+
+<!-- ═══════════ RESULTS PAGE ═══════════ -->
+<div id="results-page">
+
+  <!-- Top bar with mini logo + search -->
+  <div class="top-bar">
+    <div class="mini-logo-text" onclick="goHome()"><span class="c1">G</span><span class="c2">ů</span><span class="c3">g</span><span class="c4">l</span></div>
+    <div class="search-bar" id="topBar" style="flex:1;">
+      <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/></svg>
+      <input id="topQueryInput" type="text" autocomplete="off" />
+      <button class="clear-btn" id="topClearBtn" onclick="clearTopInput()">&times;</button>
+    </div>
+  </div>
+
+  <!-- Export strip -->
+  <div class="export-strip" id="exportStrip" style="display:none;">
+    <span class="info" id="resultStats"></span>
+    <button class="export-btn" onclick="doExport('json')">&#8681; JSON</button>
+    <button class="export-btn" onclick="doExport('csv')">&#8681; CSV</button>
+    <button class="export-btn" onclick="doExport('xml')">&#8681; XML</button>
+  </div>
+
+  <!-- Results -->
+  <div class="results-container" id="resultsContainer">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-top">Česko</div>
+    <div class="footer-bottom">
+      <div>
+        <a href="#">Gůgl Scraper</a>
+        <a href="#">mozna.inizio.cz</a>
+        <a href="#">Roman Kaco 2026</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let lastData = null;
+
+// ── Input management ──
+const qi = document.getElementById('queryInput');
+const cb = document.getElementById('clearBtn');
+const tqi = document.getElementById('topQueryInput');
+const tcb = document.getElementById('topClearBtn');
+
+qi.addEventListener('input', () => cb.classList.toggle('show', qi.value.length > 0));
+tqi.addEventListener('input', () => tcb.classList.toggle('show', tqi.value.length > 0));
+qi.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
+tqi.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(tqi.value.trim()); });
+
+function clearInput() { qi.value = ''; cb.classList.remove('show'); qi.focus(); }
+function clearTopInput() { tqi.value = ''; tcb.classList.remove('show'); tqi.focus(); }
+
+// ── Navigation ──
+function goHome() {
+  document.getElementById('results-page').classList.remove('show');
+  document.getElementById('landing').classList.remove('hidden');
+  qi.value = tqi.value;
+  cb.classList.toggle('show', qi.value.length > 0);
+  qi.focus();
+}
+
+function lucky() {
+  const q = qi.value.trim();
+  if (q) window.open('https://www.google.com/search?q=' + encodeURIComponent(q) + '&btnI', '_blank');
+}
+
+// ── Search ──
+async function doSearch(q) {
+  const query = q || qi.value.trim();
+  if (!query) { qi.focus(); return; }
+
+  // Switch to results page
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('results-page').classList.add('show');
+  tqi.value = query;
+  tcb.classList.toggle('show', query.length > 0);
+  document.getElementById('exportStrip').style.display = 'none';
+
+  // Show spinner
+  const container = document.getElementById('resultsContainer');
+  container.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    const resp = await fetch('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    });
+    const json = await resp.json();
+
+    if (!resp.ok) {
+      container.innerHTML = `<div class="error-box">${esc(json.error || 'Nastala chyba.')}</div>`;
+      return;
+    }
+
+    lastData = json;
+    renderResults(json);
+  } catch (err) {
+    container.innerHTML = `<div class="error-box">Síťová chyba: ${esc(err.message)}</div>`;
+  }
+}
+
+function renderResults(data) {
+  const container = document.getElementById('resultsContainer');
+  container.innerHTML = '';
+
+  // Stats
+  document.getElementById('resultStats').textContent =
+    `Přibližně ${data.totalResults} výsledků (${(Math.random() * 0.4 + 0.2).toFixed(2)} s)`;
+  document.getElementById('exportStrip').style.display = 'flex';
+
+  if (!data.results || data.results.length === 0) {
+    container.innerHTML = `
+      <div style="padding:40px 0;color:#70757a;font-size:14px;">
+        <p style="font-size:16px;color:#202124;margin-bottom:12px;">Nebyla nalezena žádná shoda s vaším dotazem</p>
+        <p>Zkuste:</p>
+        <ul style="margin:8px 0 0 20px;"><li>jiné klíčové slovo</li><li>obecnější výraz</li></ul>
+      </div>`;
+    return;
+  }
+
+  data.results.forEach((r) => {
+    const hostname = r.displayUrl || (() => { try { return new URL(r.url).hostname; } catch { return r.url; } })();
+    const favicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=32`;
+
+    const el = document.createElement('div');
+    el.className = 'result-item';
+    el.innerHTML = `
+      <div class="cite-row">
+        <div class="site-icon"><img src="${favicon}" alt="" onerror="this.style.display='none'"/></div>
+        <div class="cite-info">
+          <div class="cite-name">${esc(hostname)}</div>
+          <div class="cite-url">${esc(r.url)}</div>
+        </div>
+      </div>
+      <a class="title" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>
+      <div class="snippet">${esc(r.snippet)}</div>
+    `;
+    container.appendChild(el);
+  });
+}
+
+// ── Export ──
+async function doExport(format) {
+  if (!lastData) return;
+  const resp = await fetch('/api/export', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: lastData, format }),
+  });
+  if (!resp.ok) { alert('Export selhal.'); return; }
+  const blob = await resp.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const cd = resp.headers.get('content-disposition') || '';
+  const m = cd.match(/filename="?([^"]+)"?/);
+  a.href = url;
+  a.download = m ? m[1] : `results.${format}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+
+</body>
+</html>
